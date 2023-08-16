@@ -42,7 +42,7 @@ void FreqCounter::formatFreq(char* c)
         *c++ = *pf++;
         
         if ((len - i - 1) % 3 == 0 && i < len-1)
-            *c++ = ',';
+            *c++ = ' ';
     }
 
     if (m_gatePeriod > 1)
@@ -80,7 +80,7 @@ ISR(INT0_vect)
         TIMSK1 = 0;                     // stop timer 1 overflow interrupt
         EIMSK = 0;                      // stop external interrupt
         
-        //TIMSK0 |= _BV(TOIE0);           // enable timer 0 overflow interrupt
+        TIMSK0 |= _BV(TOIE0);           // enable timer 0 overflow interrupt
         
         gpsFreq.freq = ((uint32_t) gpsFreq.m_t1ovf << 16) + TCNT1;
         
