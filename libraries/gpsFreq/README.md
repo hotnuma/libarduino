@@ -1,6 +1,4 @@
-# This is a fork of gpsFreq by Jack Christensen
-
-# Original Repository : Arduino GPS Frequency Counter Library
+# Arduino GPS Frequency Counter Library
 http://github.com/JChristensen/gpsFreq  
 README file  
 Jack Christensen  
