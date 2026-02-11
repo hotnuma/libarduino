@@ -9,8 +9,7 @@
 // Connect the 1 PPS signal to INT0 (D2 pin).
 // Connect the input frequency to be measured to T1 (D5 pin).
 
-#include <gpsFreq.h>
-// https://github.com/JChristensen/gpsFreq
+#include <gpsFreq.h>        // https://github.com/JChristensen/gpsFreq
 
 // starts counting
 void FreqCounter::start(uint8_t gatePeriod)
@@ -65,11 +64,6 @@ void FreqCounter::formatFreq(char* c)
 
 FreqCounter gpsFreq;    // instantiate the frequency counter object for the user
 
-ISR(TIMER1_OVF_vect)
-{
-    ++gpsFreq.m_t1ovf;
-}
-
 ISR(INT0_vect)
 {
     if (gpsFreq.m_gateInterrupts == gpsFreq.m_gatePeriod)
@@ -86,11 +80,11 @@ ISR(INT0_vect)
         
         gpsFreq.isBusy = false;
         digitalWrite(LED_BUILTIN, LOW);
-        
     }
-    else //if (gpsFreq.m_gateInterrupts == 0)
+    else
     {   
         // start counting with the first interrupt
+        
         TCCR1B = 0;
         TCCR1A = 0;                     // stop timer 1
         TCCR1C = 0;
@@ -105,4 +99,10 @@ ISR(INT0_vect)
     ++gpsFreq.m_gateInterrupts;
     ++gpsFreq.ppsTotal;
 }
+
+ISR(TIMER1_OVF_vect)
+{
+    ++gpsFreq.m_t1ovf;
+}
+
 
