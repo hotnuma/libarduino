@@ -66,7 +66,21 @@ FreqCounter gpsFreq;    // instantiate the frequency counter object for the user
 
 ISR(INT0_vect)
 {
-    if (gpsFreq.m_gateInterrupts == gpsFreq.m_gatePeriod)
+    if (gpsFreq.m_gateInterrupts == 0)
+    {   
+        // start counting with the first interrupt
+        
+        TCCR1B = 0;
+        TCCR1A = 0;                     // stop timer 1
+        TCCR1C = 0;
+        TIMSK1 = 0;
+        TCNT1 = 0;                      // zero timer 1
+        TIFR1 = _BV(TOV1);              // clear timer 1 overflow flag
+        gpsFreq.m_t1ovf = 0;
+        TIMSK1 = _BV(TOIE1);            // interrupt on timer 1 overflow
+        TCCR1B = _BV(CS12) | _BV(CS11); // start timer 1, external clock on falling edge
+    }
+    else if (gpsFreq.m_gateInterrupts >= gpsFreq.m_gatePeriod)
     {
         // time to stop counting?
         
@@ -80,20 +94,6 @@ ISR(INT0_vect)
         
         gpsFreq.isBusy = false;
         digitalWrite(LED_BUILTIN, LOW);
-    }
-    else
-    {   
-        // start counting with the first interrupt
-        
-        TCCR1B = 0;
-        TCCR1A = 0;                     // stop timer 1
-        TCCR1C = 0;
-        TIMSK1 = 0;
-        TCNT1 = 0;                      // zero timer 1
-        TIFR1 = _BV(TOV1);              // clear timer 1 overflow flag
-        gpsFreq.m_t1ovf = 0;
-        TIMSK1 = _BV(TOIE1);            // interrupt on timer 1 overflow
-        TCCR1B = _BV(CS12) | _BV(CS11); // start timer 1, external clock on falling edge
     }
     
     ++gpsFreq.m_gateInterrupts;
