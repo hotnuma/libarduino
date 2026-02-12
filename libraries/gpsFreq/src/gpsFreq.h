@@ -18,15 +18,21 @@ class FreqCounter
 {
     public:
     
-        FreqCounter() {    pinMode(LED_BUILTIN, OUTPUT);};                   // constructor
+        FreqCounter()
+        {
+            pinMode(LED_BUILTIN, OUTPUT);
+        };
+        
         void start(uint8_t gatePeriod);     // gatePeriod in seconds (1, 10, 100)
-        void formatFreq(char* c);           // returns freq as a formatted string
-        volatile bool isBusy;               // flag to indicate counting complete
+        void formatFreq(char *c);           // returns freq as a formatted string
+        
+        uint32_t freq = 0;                  // the counted frequency
+        uint8_t m_gatePeriod = 1;           // gate period in seconds
+        volatile bool isBusy = false;       // flag to indicate counting complete
+        
         volatile uint16_t ppsTotal;         // cumulative count of pps interrupts
         volatile uint16_t m_t1ovf;          // timer1 overflow count
         volatile uint8_t m_gateInterrupts;  // number of interrupts (caused by the 1PPS gate signal)
-        uint8_t m_gatePeriod;               // gate period in seconds
-        uint32_t freq;                      // the counted frequency
 };
 
 extern FreqCounter gpsFreq;

@@ -6,16 +6,17 @@
 // GPS Frequency Counter Library for Arduino
 // Uses 1 PPS from a GPS receiver as an accurate time base.
 // Tested with Arduino 1.8.19 and an Arduino Uno.
-// Connect the 1 PPS signal to INT0 (D2 pin).
 // Connect the input frequency to be measured to T1 (D5 pin).
+// Connect the 1 PPS signal to INT0 (D2 pin).
 
-#include <gpsFreq.h>        // https://github.com/JChristensen/gpsFreq
+#include <gpsFreq.h>
 
-// starts counting
+// global object
+FreqCounter gpsFreq;
+
 void FreqCounter::start(uint8_t gatePeriod)
 {
     isBusy = true;
-    digitalWrite(LED_BUILTIN, HIGH);
     
     m_gatePeriod = gatePeriod;
     m_gateInterrupts = 0;
@@ -27,16 +28,17 @@ void FreqCounter::start(uint8_t gatePeriod)
     EIMSK = _BV(INT0);      // enable external interrupt
 }
 
-// return the frequency as a formatted string
-void FreqCounter::formatFreq(char* c)
+void FreqCounter::formatFreq(char *c)
 {
+    // return the frequency as a formatted string
+    
     char f[16];
 
     ltoa(freq / m_gatePeriod, f, 10);
-    char* pf = f;
+    char *pf = f;
     uint8_t len = strlen(f);
     
-    for (uint8_t i=0; i<len; i++)
+    for (uint8_t i = 0; i < len; ++i)
     {
         *c++ = *pf++;
         
@@ -62,8 +64,6 @@ void FreqCounter::formatFreq(char* c)
     }
 }
 
-FreqCounter gpsFreq;    // instantiate the frequency counter object for the user
-
 ISR(INT0_vect)
 {
     if (gpsFreq.m_gateInterrupts == 0)
@@ -77,12 +77,15 @@ ISR(INT0_vect)
         TCNT1 = 0;                      // zero timer 1
         TIFR1 = _BV(TOV1);              // clear timer 1 overflow flag
         gpsFreq.m_t1ovf = 0;
+        
         TIMSK1 = _BV(TOIE1);            // interrupt on timer 1 overflow
         TCCR1B = _BV(CS12) | _BV(CS11); // start timer 1, external clock on falling edge
+        
+        //digitalWrite(LED_BUILTIN, HIGH);
     }
     else if (gpsFreq.m_gateInterrupts >= gpsFreq.m_gatePeriod)
     {
-        // time to stop counting?
+        // stop counting
         
         TCCR1B = 0;                     // stop timer 1
         TIMSK1 = 0;                     // stop timer 1 overflow interrupt
@@ -93,7 +96,8 @@ ISR(INT0_vect)
         gpsFreq.freq = ((uint32_t) gpsFreq.m_t1ovf << 16) + TCNT1;
         
         gpsFreq.isBusy = false;
-        digitalWrite(LED_BUILTIN, LOW);
+        
+        //digitalWrite(LED_BUILTIN, LOW);
     }
     
     ++gpsFreq.m_gateInterrupts;
@@ -104,5 +108,4 @@ ISR(TIMER1_OVF_vect)
 {
     ++gpsFreq.m_t1ovf;
 }
-
 
