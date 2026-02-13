@@ -21,6 +21,7 @@ void FreqCounter::start(uint8_t gatePeriod)
     m_gatePeriod = gatePeriod;
     m_gateInterrupts = 0;
 
+    // v 1.1.0
     TIMSK0 &= ~_BV(TOIE0);  // disable timer 0 overflow interrupt -- disables millis(), delay()
     
     EICRA = _BV(ISC01);     // external interrupt on falling edge
@@ -66,9 +67,28 @@ void FreqCounter::formatFreq(char *c)
 
 ISR(INT0_vect)
 {
-    if (gpsFreq.m_gateInterrupts == 0)
+    // stop counting
+    
+    if (gpsFreq.m_gateInterrupts >= gpsFreq.m_gatePeriod)
+    {
+        
+        TCCR1B = 0;                     // stop timer 1
+        TIMSK1 = 0;                     // stop timer 1 overflow interrupt
+        EIMSK = 0;                      // stop external interrupt
+        
+        // v 1.1.0
+        TIMSK0 |= _BV(TOIE0);           // enable timer 0 overflow interrupt
+        
+        gpsFreq.freq = ((uint32_t) gpsFreq.m_t1ovf << 16) + TCNT1;
+        
+        gpsFreq.isBusy = false;
+        
+        //digitalWrite(LED_BUILTIN, LOW);
+    }
+    
+    // start counting
+    else if (gpsFreq.m_gateInterrupts == 0)
     {   
-        // start counting with the first interrupt
         
         TCCR1B = 0;
         TCCR1A = 0;                     // stop timer 1
@@ -82,22 +102,6 @@ ISR(INT0_vect)
         TCCR1B = _BV(CS12) | _BV(CS11); // start timer 1, external clock on falling edge
         
         //digitalWrite(LED_BUILTIN, HIGH);
-    }
-    else if (gpsFreq.m_gateInterrupts >= gpsFreq.m_gatePeriod)
-    {
-        // stop counting
-        
-        TCCR1B = 0;                     // stop timer 1
-        TIMSK1 = 0;                     // stop timer 1 overflow interrupt
-        EIMSK = 0;                      // stop external interrupt
-        
-        TIMSK0 |= _BV(TOIE0);           // enable timer 0 overflow interrupt
-        
-        gpsFreq.freq = ((uint32_t) gpsFreq.m_t1ovf << 16) + TCNT1;
-        
-        gpsFreq.isBusy = false;
-        
-        //digitalWrite(LED_BUILTIN, LOW);
     }
     
     ++gpsFreq.m_gateInterrupts;
