@@ -29,42 +29,6 @@ void FreqCounter::start(uint8_t gatePeriod)
     EIMSK = _BV(INT0);      // enable external interrupt
 }
 
-void FreqCounter::formatFreq(char *c)
-{
-    // return the frequency as a formatted string
-    
-    char f[16];
-
-    ltoa(freq / m_gatePeriod, f, 10);
-    char *pf = f;
-    uint8_t len = strlen(f);
-    
-    for (uint8_t i = 0; i < len; ++i)
-    {
-        *c++ = *pf++;
-        
-        if ((len - i - 1) % 3 == 0 && i < len-1)
-            *c++ = ' ';
-    }
-
-    if (m_gatePeriod > 1)
-    {
-        itoa(freq % m_gatePeriod, f, 10);
-        *c++ = '.';
-        
-        if (strlen(f) < 2 && m_gatePeriod > 10)
-            *c++ = '0';
-        
-        pf = f;
-        
-        while ((*c++ = *pf++));
-    }
-    else
-    {
-        *c++ = 0;
-    }
-}
-
 ISR(INT0_vect)
 {
     // stop counting
@@ -111,5 +75,41 @@ ISR(INT0_vect)
 ISR(TIMER1_OVF_vect)
 {
     ++gpsFreq.m_t1ovf;
+}
+
+void FreqCounter::formatFreq(char *c)
+{
+    // return the frequency as a formatted string
+    
+    char f[16];
+
+    ltoa(freq / m_gatePeriod, f, 10);
+    char *pf = f;
+    uint8_t len = strlen(f);
+    
+    for (uint8_t i = 0; i < len; ++i)
+    {
+        *c++ = *pf++;
+        
+        if ((len - i - 1) % 3 == 0 && i < len-1)
+            *c++ = ' ';
+    }
+
+    if (m_gatePeriod > 1)
+    {
+        itoa(freq % m_gatePeriod, f, 10);
+        *c++ = '.';
+        
+        if (strlen(f) < 2 && m_gatePeriod > 10)
+            *c++ = '0';
+        
+        pf = f;
+        
+        while ((*c++ = *pf++));
+    }
+    else
+    {
+        *c++ = 0;
+    }
 }
 
