@@ -35,7 +35,6 @@ ISR(INT0_vect)
     
     if (gpsFreq.gateInterrupts >= gpsFreq.gatePeriod)
     {
-        
         TCCR1B = 0;                     // stop timer 1
         TIMSK1 = 0;                     // stop timer 1 overflow interrupt
         EIMSK = 0;                      // stop external interrupt
@@ -51,9 +50,9 @@ ISR(INT0_vect)
     }
     
     // start counting
+    
     else if (gpsFreq.gateInterrupts == 0)
     {   
-        
         TCCR1B = 0;
         TCCR1A = 0;                     // stop timer 1
         TCCR1C = 0;
@@ -69,7 +68,7 @@ ISR(INT0_vect)
     }
     
     ++gpsFreq.gateInterrupts;
-    ++gpsFreq.ppsTotal;
+    //++gpsFreq.ppsTotal;
 }
 
 ISR(TIMER1_OVF_vect)

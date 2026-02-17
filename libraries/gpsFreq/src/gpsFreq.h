@@ -23,18 +23,19 @@ class FreqCounter
             pinMode(LED_BUILTIN, OUTPUT);
         };
         
-        void start(uint8_t period);     // gatePeriod in seconds (1, 10, 100)
-        void formatFreq(char *result);      // returns freq as a formatted string
+        void start(uint8_t period);             // gatePeriod in seconds (1, 10, 100)
+        void formatFreq(char *result);          // returns freq as a formatted string
         
-        volatile bool isBusy = false;       // flag to indicate counting complete
-        uint32_t freq = 0;                  // the counted frequency
-        volatile uint16_t ppsTotal;         // cumulative count of pps interrupts
+        volatile bool isBusy = false;           // flag to indicate counting complete
+        uint32_t freq = 0;                      // the counted frequency
+        volatile uint16_t t1overflow = 0;       // timer1 overflow count
         
-        uint8_t gatePeriod = 1;           // gate period in seconds
-        volatile uint8_t gateInterrupts;  // number of interrupts (caused by the 1PPS gate signal)
-        volatile uint16_t t1overflow;          // timer1 overflow count
+        uint8_t gatePeriod = 1;                 // gate period in seconds
+        volatile uint8_t gateInterrupts = 0;    // number of interrupts (caused by the 1PPS gate signal)
+        //volatile uint16_t ppsTotal = 0;         // cumulative count of pps interrupts
 };
 
 extern FreqCounter gpsFreq;
 
 #endif
+
