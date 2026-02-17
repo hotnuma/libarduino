@@ -14,12 +14,12 @@
 // global object
 FreqCounter gpsFreq;
 
-void FreqCounter::start(uint8_t gatePeriod)
+void FreqCounter::start(uint8_t period)
 {
     isBusy = true;
     
-    m_gatePeriod = gatePeriod;
-    m_gateInterrupts = 0;
+    gatePeriod = period;
+    gateInterrupts = 0;
 
     // v 1.1.0
     TIMSK0 &= ~_BV(TOIE0);  // disable timer 0 overflow interrupt -- disables millis(), delay()
@@ -33,7 +33,7 @@ ISR(INT0_vect)
 {
     // stop counting
     
-    if (gpsFreq.m_gateInterrupts >= gpsFreq.m_gatePeriod)
+    if (gpsFreq.gateInterrupts >= gpsFreq.gatePeriod)
     {
         
         TCCR1B = 0;                     // stop timer 1
@@ -43,7 +43,7 @@ ISR(INT0_vect)
         // v 1.1.0
         TIMSK0 |= _BV(TOIE0);           // enable timer 0 overflow interrupt
         
-        gpsFreq.freq = ((uint32_t) gpsFreq.m_t1ovf << 16) + TCNT1;
+        gpsFreq.freq = ((uint32_t) gpsFreq.t1overflow << 16) + TCNT1;
         
         gpsFreq.isBusy = false;
         
@@ -51,7 +51,7 @@ ISR(INT0_vect)
     }
     
     // start counting
-    else if (gpsFreq.m_gateInterrupts == 0)
+    else if (gpsFreq.gateInterrupts == 0)
     {   
         
         TCCR1B = 0;
@@ -60,7 +60,7 @@ ISR(INT0_vect)
         TIMSK1 = 0;
         TCNT1 = 0;                      // zero timer 1
         TIFR1 = _BV(TOV1);              // clear timer 1 overflow flag
-        gpsFreq.m_t1ovf = 0;
+        gpsFreq.t1overflow = 0;
         
         TIMSK1 = _BV(TOIE1);            // interrupt on timer 1 overflow
         TCCR1B = _BV(CS12) | _BV(CS11); // start timer 1, external clock on falling edge
@@ -68,48 +68,48 @@ ISR(INT0_vect)
         //digitalWrite(LED_BUILTIN, HIGH);
     }
     
-    ++gpsFreq.m_gateInterrupts;
+    ++gpsFreq.gateInterrupts;
     ++gpsFreq.ppsTotal;
 }
 
 ISR(TIMER1_OVF_vect)
 {
-    ++gpsFreq.m_t1ovf;
+    ++gpsFreq.t1overflow;
 }
 
-void FreqCounter::formatFreq(char *c)
+void FreqCounter::formatFreq(char *result)
 {
     // return the frequency as a formatted string
     
     char f[16];
 
-    ltoa(freq / m_gatePeriod, f, 10);
+    ltoa(freq / gatePeriod, f, 10);
     char *pf = f;
     uint8_t len = strlen(f);
     
     for (uint8_t i = 0; i < len; ++i)
     {
-        *c++ = *pf++;
+        *result++ = *pf++;
         
         if ((len - i - 1) % 3 == 0 && i < len-1)
-            *c++ = ' ';
+            *result++ = ' ';
     }
 
-    if (m_gatePeriod > 1)
+    if (gatePeriod > 1)
     {
-        itoa(freq % m_gatePeriod, f, 10);
-        *c++ = '.';
+        itoa(freq % gatePeriod, f, 10);
+        *result++ = '.';
         
-        if (strlen(f) < 2 && m_gatePeriod > 10)
-            *c++ = '0';
+        if (strlen(f) < 2 && gatePeriod > 10)
+            *result++ = '0';
         
         pf = f;
         
-        while ((*c++ = *pf++));
+        while ((*result++ = *pf++));
     }
     else
     {
-        *c++ = 0;
+        *result++ = 0;
     }
 }
 
